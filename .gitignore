@@ -29,6 +29,7 @@ htmlcov/
 
 # Database
 *.db
+*.sqlite
 *.sqlite3
 data/*.db
 
@@ -43,6 +44,7 @@ pnpm-debug.log*
 
 # Environment
 .env
+.env.*
 .env.local
 
 # IDE
