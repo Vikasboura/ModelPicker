@@ -138,9 +138,6 @@ To configure the custom subdomain `modelpicker.vikasboura.dev`:
    - In Vercel Project Settings > Domains: Add `modelpicker.vikasboura.dev`.
    - Update DNS provider for `vikasboura.dev`: Add a `CNAME` record for `modelpicker` pointing to `cname.vercel-dns.com`.
 
-2. **Backend API URL Configuration**:
-   - Set Vercel Environment Variable:
-     ```env
-     VITE_API_URL=https://api.modelpicker.vikasboura.dev
-     ```
-   - For public demo instances without self-hosted GPUs, point `VITE_API_URL` to your containerized cloud backend (Railway / Cloud Run) with a managed Ollama instance.
+2. **Public Demo & Local Architecture**:
+   - **Public Demo Mode ($0 Cost)**: The production deployment on Vercel serves both the React/Vite frontend and serverless edge functions (`/api/*`). Inference is powered by Groq's free cloud API via `PUBLIC_PROVIDER_API_KEY` stored securely in Vercel project environment variables (server-side only). No paid cloud VMs or backend instances required.
+   - **Local Self-Hosted Mode**: Users can clone the repo and run `docker compose up -d` for an entirely local stack with private Ollama model weights and FastAPI at `http://localhost:8000`.

@@ -4,47 +4,74 @@ This guide covers production deployment strategies for **ModelPicker**, detailin
 
 ---
 
-## 1. Architecture Overview & Cloud Reality
+## 1. Dual Deployment Architecture
 
-ModelPicker consists of three core components:
+ModelPicker is architected to operate in two distinct modes:
 
+### Mode A: $0-Cost Public Cloud Demo (Live at `modelpicker.vikasboura.dev`)
+```
+┌────────────────────────────────────────────────────────┐
+│             Vercel Cloud Deployment                   │
+│                                                        │
+│  ┌───────────────────────┐   ┌──────────────────────┐  │
+│  │     React 19 SPA      │───│  Serverless API      │  │
+│  │   Vite + Tailwind     │   │  /api/* (Node.js)    │  │
+│  └───────────────────────┘   └──────────┬───────────┘  │
+└─────────────────────────────────────────┼──────────────┘
+                                          │ HTTPS (API Key server-side)
+                                          ▼
+                               ┌──────────────────────┐
+                               │   Groq Cloud (Free)  │
+                               │   Fast LLM Inference │
+                               └──────────────────────┘
+```
+- **Hosting**: Vercel (Front-end + Serverless Functions)
+- **Domain**: `https://modelpicker.vikasboura.dev`
+- **Cost**: **$0.00 / month** (no persistent cloud VM or paid GPU instances)
+- **Security**: The `PUBLIC_PROVIDER_API_KEY` is kept strictly server-side in Vercel environment variables, completely hidden from client bundles and Git.
+
+---
+
+### Mode B: Local / Self-Hosted Mode (Docker & Ollama)
 ```
 ┌──────────────────────────────────────┐
-│          Frontend (SPA)              │  Hosted on Vercel or Static CDN
-│  React 19 + Vite + Tailwind CSS      │  URL: https://modelpicker.vikasboura.dev
+│          Frontend (SPA)              │  Local React Dev Server or Docker
+│  React 19 + Vite + Tailwind CSS      │  URL: http://localhost:5173
 └──────────────────┬───────────────────┘
-                   │ HTTPS / SSE
+                   │ HTTP / SSE
                    ▼
 ┌──────────────────────────────────────┐
-│          Backend (API)               │  Hosted on Container Cloud (Render / Railway / VPS)
-│      FastAPI + SQLAlchemy            │  URL: https://api.modelpicker.vikasboura.dev
+│          Backend (API)               │  FastAPI + SQLAlchemy
+│      Python 3.11 / Uvicorn           │  URL: http://localhost:8000
 └──────────┬───────────────────┬───────┘
            │                   │
            ▼                   ▼
 ┌──────────────────────┐ ┌───────────────────────────┐
-│  Ollama Daemon (GPU) │ │     SQLite / Postgres     │
-│  Model Weights Host  │ │    Persistent Storage     │
+│  Ollama Daemon (GPU) │ │          SQLite           │
+│  Model Weights Host  │ │    ./data/modelpicker.db  │
 └──────────────────────┘ └───────────────────────────┘
 ```
-
-### Critical Infrastructure Assessment:
-- **Frontend (Vercel)**: **Optimal**. Vercel excels at hosting React/Vite SPAs globally with zero maintenance and native custom domain mapping (`modelpicker.vikasboura.dev`).
-- **Backend & Ollama (Why Vercel Cannot Run Ollama)**:
-  - Vercel is a serverless platform with execution time limits (10s to 60s max) and ephemeral file systems.
-  - LLM inference takes seconds to minutes, and Ollama requires persistent local disk storage (multi-gigabyte GGUF model files) and GPU/CPU acceleration.
-  - **Verdict**: Backend + Ollama must run on a persistent container host (e.g. VPS, Railway, Render with persistent disk, GCP Compute Engine, AWS EC2, or Hetzner).
+- **Hosting**: Local developer machine or private GPU server.
+- **Run Command**: `docker compose up -d`
+- **Privacy**: 100% air-gapped, zero external API calls.
 
 ---
 
-## 2. Recommended Deployment Architectures
+## 2. Public Demo Deployment (Vercel Step-by-Step)
 
-### Option A: Hybrid Production (Recommended)
-- **Frontend**: Deployed to **Vercel** connected to `modelpicker.vikasboura.dev`.
-- **Backend + Ollama**: Deployed to a **GPU-enabled VPS** (RunPod, Lambda Labs, Hetzner, AWS EC2 `g4dn.xlarge`, or GCP Compute Engine) running `docker-compose.yml` behind an Nginx reverse proxy with SSL (Let's Encrypt).
+The public demo is deployed directly from the GitHub repository to Vercel:
 
-### Option B: Unified Single-Server Deployment
-- Run the complete `docker-compose.yml` (Frontend, Backend, Ollama) on an Ubuntu 22.04 LTS VPS with Docker and Docker Compose installed.
-- Route incoming traffic through Caddy or Nginx with automatic SSL certificates.
+1. **Repository**: `https://github.com/Vikasboura/ModelPicker`
+2. **Project Root Directory**: `frontend`
+3. **Framework**: `Vite`
+4. **Build Command**: `npm run build`
+5. **Output Directory**: `dist`
+6. **Required Environment Variables (Vercel Project Settings > Environment Variables)**:
+   - `PUBLIC_PROVIDER_API_KEY`: Your free Groq API key (kept secure, server-side only).
+   - *(Optional)* `PUBLIC_PROVIDER_BASE_URL`: `https://api.groq.com/openai/v1`
+7. **Custom Domain**:
+   - Set up `modelpicker.vikasboura.dev` in Vercel Project Domains.
+   - Configure DNS CNAME record for `modelpicker` pointing to `cname.vercel-dns.com`.
 
 ---
 
@@ -166,31 +193,52 @@ api.modelpicker.vikasboura.dev {
 
 After deployment, verify that all health checkpoints return 200 OK:
 
+### A. Public Cloud Demo Verification
+1. **Health Check**:
+   ```bash
+   curl -s https://modelpicker.vikasboura.dev/api/health | jq
+   ```
+   Expected response:
+   ```json
+   {
+     "status": "healthy",
+     "mode": "public_demo",
+     "provider": "Groq / Public Free Cloud",
+     "provider_configured": true
+   }
+   ```
+
+2. **Model Discovery Check**:
+   ```bash
+   curl -s https://modelpicker.vikasboura.dev/api/models | jq
+   ```
+
+### B. Local / Self-Hosted Backend Verification
 1. **Backend Health Check**:
    ```bash
-   curl -s https://api.modelpicker.vikasboura.dev/api/v1/health | jq
+   curl -s http://localhost:8000/api/v1/health | jq
    ```
    Expected response:
    ```json
    {
      "status": "healthy",
      "version": "1.0.0",
-     "database": "connected",
+     "database": { "connected": true, "engine": "sqlite" },
      "ollama": {
        "status": "connected",
-       "base_url": "http://ollama:11434"
+       "base_url": "http://localhost:11434"
      }
    }
    ```
 
 2. **Model Discovery Check**:
    ```bash
-   curl -s https://api.modelpicker.vikasboura.dev/api/v1/models | jq
+   curl -s http://localhost:8000/api/v1/models | jq
    ```
 
 3. **Frontend Check**:
    - Visit `https://modelpicker.vikasboura.dev` in a web browser.
-   - Verify that the connection banner shows **Ollama Connected** (green indicator).
+   - Verify that the connection badge shows **Public Demo Mode: Connected (Free Cloud Tier)** or **Local Mode** based on your selector.
 
 ---
 
