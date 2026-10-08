@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.router import api_router
+from app.api.routes import health
 from app.core.config import settings
 from app.core.database import init_db
 from app.services.model_registry import model_registry_service
@@ -100,8 +101,9 @@ async def generic_exception_handler(request: Request, exc: Exception):
     )
 
 
-# Mount API V1 Router
+# Mount API Routers
 app.include_router(api_router)
+app.include_router(health.router, prefix="/api", tags=["Health"])
 
 
 @app.get("/", tags=["Root"])

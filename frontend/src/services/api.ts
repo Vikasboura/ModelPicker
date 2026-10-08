@@ -7,7 +7,8 @@ import type {
   SystemHealth,
 } from '../types';
 
-const API_BASE = '/api/v1';
+const rawBase = import.meta.env.VITE_API_URL || '';
+const API_BASE = rawBase ? `${rawBase.replace(/\/$/, '')}/api/v1` : '/api/v1';
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -139,5 +140,24 @@ export const api = {
       body: JSON.stringify({ ...params, stream: false }),
     });
     return handleResponse<InferenceResult>(res);
+  },
+
+  async scoreEvaluation(params: {
+    prompt: string;
+    response: string;
+    expected?: string | null;
+    judge_model?: string | null;
+  }): Promise<{
+    correctness_score: number;
+    completeness_score: number;
+    overall_quality_score: number;
+    feedback?: string;
+  }> {
+    const res = await fetch(`${API_BASE}/evaluations/score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+    return handleResponse(res);
   },
 };

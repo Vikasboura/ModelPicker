@@ -89,15 +89,8 @@ export const PlaygroundPage: React.FC = () => {
         // Also run rule-based evaluation on prompt and response
         let qualScore: number | null = null;
         try {
-          const evalRes = await fetch('/api/v1/evaluations/score', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt, response: res.response }),
-          });
-          if (evalRes.ok) {
-            const evalJson = await evalRes.json();
-            qualScore = evalJson.overall_quality_score;
-          }
+          const evalJson = await api.scoreEvaluation({ prompt, response: res.response });
+          qualScore = evalJson.overall_quality_score;
         } catch {
           // ignore evaluation failure in playground
         }
