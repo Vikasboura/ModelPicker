@@ -1,0 +1,55 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: modelpicker-ollama
+    # Keep Ollama internal to the docker network - do NOT expose port 11434 publicly
+    expose:
+      - "11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: modelpicker-backend
+    ports:
+      # Bind to host port 8000 for reverse proxy (Caddy / Nginx)
+      - "8000:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - DATABASE_URL=sqlite:///./data/modelpicker.db
+      - PRICING_FILE_PATH=./data/pricing.yaml
+      - DEFAULT_EVAL_FILE_PATH=./data/eval.json
+      - CORS_ORIGINS=https://modelpicker.vikasboura.dev,https://frontend-rose-kappa-37.vercel.app
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+      - MAX_CONCURRENT_REQUESTS=2
+      - WARMUP_REQUESTS=1
+      - QUALITY_WEIGHT=0.5
+      - LATENCY_WEIGHT=0.3
+      - COST_WEIGHT=0.2
+    volumes:
+      # Persistent SQLite database storage
+      - modelpicker_data:/app/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  ollama_data:
+  modelpicker_data:
