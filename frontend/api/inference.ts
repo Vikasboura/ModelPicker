@@ -107,7 +107,7 @@ export default async function handler(req: any, res: any) {
 
           try {
             const parsed = JSON.parse(dataStr);
-            const token = parsed.choices?.[0]?.delta?.content || '';
+            const token = parsed.choices?.[0]?.delta?.content || parsed.choices?.[0]?.delta?.reasoning || parsed.choices?.[0]?.delta?.reasoning_content || '';
             if (token) {
               if (firstTokenTime === null) {
                 firstTokenTime = Date.now();
@@ -146,7 +146,7 @@ export default async function handler(req: any, res: any) {
     const data: any = await upstreamRes.json();
     const durationMs = Date.now() - startTime;
     const choice = data.choices?.[0] || {};
-    const text = choice.message?.content || '';
+    const text = choice.message?.content || choice.message?.reasoning || choice.message?.reasoning_content || '';
     const usage = data.usage || {};
 
     const promptTokens = usage.prompt_tokens || Math.ceil(truncatedPrompt.length / 4);

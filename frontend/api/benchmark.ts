@@ -79,7 +79,7 @@ export default async function handler(req: any, res: any) {
 
       const data: any = await upstreamRes.json();
       const choice = data.choices?.[0] || {};
-      const text = choice.message?.content || '';
+      const text = choice.message?.content || choice.message?.reasoning || choice.message?.reasoning_content || '';
       const usage = data.usage || {};
       const completionTokens = usage.completion_tokens || Math.ceil(text.length / 4);
       const promptTokens = usage.prompt_tokens || Math.ceil(boundedPrompt.length / 4);
