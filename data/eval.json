@@ -1,0 +1,42 @@
+[
+  {
+    "id": "ml-basics",
+    "prompt": "What is machine learning in simple terms?",
+    "expected": "Machine learning is a subset of artificial intelligence where computer systems learn from data and improve their performance on tasks without being explicitly programmed."
+  },
+  {
+    "id": "rest-api",
+    "prompt": "Explain what a REST API is and mention two HTTP methods.",
+    "expected": "A REST API is an architectural style for network communication using standard HTTP methods such as GET for retrieving resources and POST for creating resources."
+  },
+  {
+    "id": "python-reverse",
+    "prompt": "Write a Python function to reverse a string in place or return its reverse.",
+    "expected": "def reverse_string(s: str) -> str:\n    return s[::-1]"
+  },
+  {
+    "id": "rag-concept",
+    "prompt": "Explain Retrieval-Augmented Generation (RAG) and why it helps reduce hallucinations.",
+    "expected": "Retrieval-Augmented Generation (RAG) retrieves relevant external documents from a knowledge base and provides them as context to the LLM, grounding answers in factual source data and reducing hallucinations."
+  },
+  {
+    "id": "acid-transactions",
+    "prompt": "What does ACID stand for in database management systems?",
+    "expected": "ACID stands for Atomicity, Consistency, Isolation, and Durability, ensuring reliable transaction processing in database management systems."
+  },
+  {
+    "id": "docker-vs-vm",
+    "prompt": "What is the key architectural difference between Docker containers and Virtual Machines?",
+    "expected": "Docker containers share the host operating system kernel and isolate user processes, making them lightweight, whereas Virtual Machines run complete guest operating systems on a hypervisor with higher overhead."
+  },
+  {
+    "id": "json-vs-yaml",
+    "prompt": "Contrast JSON and YAML in terms of syntax and typical use cases.",
+    "expected": "JSON uses strict curly braces and quotation marks, ideal for web APIs and data exchange. YAML uses indentation and whitespace, making it more human-readable and commonly used for configuration files."
+  },
+  {
+    "id": "binary-search-complexity",
+    "prompt": "What is the time complexity of binary search on a sorted array of size N, and why?",
+    "expected": "The time complexity is O(log N) because binary search halves the search space with each comparison step until the target element is found or ruled out."
+  }
+]

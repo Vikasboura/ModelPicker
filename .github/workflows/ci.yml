@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  backend-lint-and-test:
+    name: Backend CI (Ruff & Pytest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Ruff Lint Check
+        run: |
+          ruff check backend
+
+      - name: Run Ruff Format Check
+        run: |
+          ruff format --check backend
+
+      - name: Run Pytest
+        env:
+          DATABASE_URL: sqlite:///:memory:
+          PRICING_FILE_PATH: ./data/pricing.yaml
+        run: |
+          pytest backend/tests
+
+  frontend-lint-and-build:
+    name: Frontend CI (Lint & Build)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run Lint
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Build Production Bundle
+        working-directory: ./frontend
+        run: npm run build
+
+  docker-build:
+    name: Docker Build Validation
+    runs-on: ubuntu-latest
+    needs: [backend-lint-and-test, frontend-lint-and-build]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Backend Docker Image
+        run: |
+          docker build -t modelpicker-backend:test -f Dockerfile .
+
+      - name: Build Frontend Docker Image
+        run: |
+          docker build -t modelpicker-frontend:test -f frontend/Dockerfile ./frontend

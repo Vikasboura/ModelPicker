@@ -1,0 +1,84 @@
+# Model Pricing and Metadata Configuration
+# Prices are expressed in USD per 1M tokens ($ / 1,000,000 tokens)
+# Note: Local self-hosted inference compute cost can also be approximated,
+# or mapped to hosted serverless API equivalents for cost comparison.
+# If a model has no pricing entry, cost is marked as unavailable.
+
+models:
+  llama3.2:1b:
+    id: "llama3.2:1b"
+    name: "Llama 3.2 1B"
+    provider: "Meta"
+    parameter_count: "1.24B"
+    context_length: 131072
+    input_price: 0.04
+    output_price: 0.04
+    enabled: true
+    metadata:
+      family: "llama"
+      description: "Meta lightweight multilingual model optimized for on-device and fast inference."
+
+  qwen2.5:1.5b:
+    id: "qwen2.5:1.5b"
+    name: "Qwen 2.5 1.5B"
+    provider: "Alibaba Cloud"
+    parameter_count: "1.54B"
+    context_length: 32768
+    input_price: 0.05
+    output_price: 0.05
+    enabled: true
+    metadata:
+      family: "qwen"
+      description: "State-of-the-art compact model with strong coding, math, and multilingual performance."
+
+  gemma2:2b:
+    id: "gemma2:2b"
+    name: "Gemma 2 2B"
+    provider: "Google"
+    parameter_count: "2.61B"
+    context_length: 8192
+    input_price: 0.075
+    output_price: 0.075
+    enabled: true
+    metadata:
+      family: "gemma"
+      description: "Google lightweight open model built with knowledge distillation and high efficiency."
+
+  llama3.2:3b:
+    id: "llama3.2:3b"
+    name: "Llama 3.2 3B"
+    provider: "Meta"
+    parameter_count: "3.21B"
+    context_length: 131072
+    input_price: 0.06
+    output_price: 0.06
+    enabled: true
+    metadata:
+      family: "llama"
+      description: "Meta 3B parameter model offering strong reasoning for edge devices."
+
+  qwen2.5:3b:
+    id: "qwen2.5:3b"
+    name: "Qwen 2.5 3B"
+    provider: "Alibaba Cloud"
+    parameter_count: "3.09B"
+    context_length: 32768
+    input_price: 0.08
+    output_price: 0.08
+    enabled: true
+    metadata:
+      family: "qwen"
+      description: "Mid-tier compact model balancing speed and reasoning depth."
+
+  phi3:mini:
+    id: "phi3:mini"
+    name: "Phi-3 Mini 3.8B"
+    provider: "Microsoft"
+    parameter_count: "3.82B"
+    context_length: 128000
+    input_price: 0.10
+    output_price: 0.10
+    enabled: true
+    metadata:
+      family: "phi"
+      description: "Microsoft compact model trained on high-quality synthetic textbooks."
