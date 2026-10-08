@@ -49,6 +49,8 @@ export const PlaygroundPage: React.FC = () => {
       }
     };
     fetchModels();
+    window.addEventListener('modelpicker_mode_changed', fetchModels);
+    return () => window.removeEventListener('modelpicker_mode_changed', fetchModels);
   }, []);
 
   const toggleModel = (id: string) => {

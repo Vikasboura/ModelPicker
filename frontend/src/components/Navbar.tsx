@@ -9,9 +9,11 @@ import {
   Terminal,
   AlertTriangle,
   Compass,
+  Cloud,
+  HardDrive,
 } from 'lucide-react';
 import { api } from '../services/api';
-import type { SystemHealth } from '../types';
+import type { InferenceMode, SystemHealth } from '../types';
 
 interface NavbarProps {
   currentTab: string;
@@ -35,20 +37,36 @@ const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' })
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
   const [health, setHealth] = useState<SystemHealth | null>(null);
+  const [mode, setMode] = useState<InferenceMode>(api.getMode());
+
+  const checkHealth = async () => {
+    try {
+      const h = await api.getHealth();
+      setHealth(h);
+    } catch {
+      setHealth(null);
+    }
+  };
 
   useEffect(() => {
-    const fetchHealth = async () => {
-      try {
-        const h = await api.getHealth();
-        setHealth(h);
-      } catch {
-        setHealth(null);
-      }
+    checkHealth();
+    const interval = setInterval(checkHealth, 10000);
+    const onModeChange = () => {
+      setMode(api.getMode());
+      checkHealth();
     };
-    fetchHealth();
-    const interval = setInterval(fetchHealth, 10000);
-    return () => clearInterval(interval);
+    window.addEventListener('modelpicker_mode_changed', onModeChange);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('modelpicker_mode_changed', onModeChange);
+    };
   }, []);
+
+  const handleToggleMode = (newMode: InferenceMode) => {
+    api.setMode(newMode);
+    setMode(newMode);
+    checkHealth();
+  };
 
   const navItems = [
     { id: 'overview', label: 'Overview', icon: Compass },
@@ -105,30 +123,65 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, onSelectTab }) => {
             })}
           </nav>
 
-          {/* Right Status & GitHub Link */}
+          {/* Right Status & Mode Toggle */}
           <div className="flex items-center gap-3">
-            {/* Live Ollama Serving Status */}
-            {health?.ollama?.available ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+            {/* Mode Switcher */}
+            <div className="flex items-center p-0.5 rounded-lg bg-dark-950 border border-dark-800 text-xs">
+              <button
+                type="button"
+                onClick={() => handleToggleMode('public')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition ${
+                  mode === 'public'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Use free cloud inference (Groq / Open-Weight)"
+              >
+                <Cloud className="w-3.5 h-3.5" />
+                <span>Public Demo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleMode('local')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md font-medium transition ${
+                  mode === 'local'
+                    ? 'bg-dark-800 text-brand-400 border border-dark-700 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Connect to local Ollama on localhost:11434"
+              >
+                <HardDrive className="w-3.5 h-3.5" />
+                <span>Local Ollama</span>
+              </button>
+            </div>
+
+            {/* Serving Status Indicator */}
+            {mode === 'public' ? (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                </span>
+                <span className="hidden sm:inline">Free Cloud</span>
+              </div>
+            ) : health?.ollama?.available ? (
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
                 <span className="hidden sm:inline">Ollama Online</span>
-                {health.ollama.version && (
-                  <span className="text-emerald-500/70 text-[11px]">v{health.ollama.version}</span>
-                )}
               </div>
             ) : (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-medium">
                 <AlertTriangle className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Ollama Offline</span>
               </div>
             )}
 
-            {/* GitHub Repo */}
+            {/* GitHub Repo Link */}
             <a
-              href="https://github.com/Vikasboura/ModelPicker"
+              href="https://github.com/Vikasboura/modelpicker"
               target="_blank"
               rel="noopener noreferrer"
               className="p-2 rounded-lg bg-dark-800 hover:bg-dark-700 text-slate-300 hover:text-white border border-dark-700/60 transition"

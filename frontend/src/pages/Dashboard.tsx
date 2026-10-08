@@ -60,6 +60,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   useEffect(() => {
     loadData();
+    window.addEventListener('modelpicker_mode_changed', loadData);
+    return () => window.removeEventListener('modelpicker_mode_changed', loadData);
   }, []);
 
   const summary = latestRun?.summary;
@@ -79,6 +81,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
     cost: r.total_cost !== null && r.total_cost !== undefined ? r.total_cost * 1000 : 0, // In milli-cents
   }));
 
+  const currentMode = api.getMode();
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
@@ -90,6 +94,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="space-y-8">
+      {/* Mode Information Banner */}
+      <div
+        className={`px-4 py-3 rounded-xl border flex items-center justify-between text-xs sm:text-sm ${
+          currentMode === 'public'
+            ? 'bg-brand-950/40 border-brand-800/60 text-brand-200'
+            : 'bg-dark-900 border-dark-800 text-slate-300'
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
+          <span
+            className={`w-2 h-2 rounded-full ${
+              currentMode === 'public' ? 'bg-cyan-400' : 'bg-emerald-400'
+            }`}
+          />
+          <span>
+            {currentMode === 'public'
+              ? 'Public Demo Mode: Evaluating open-weight models live on Groq free cloud tier. Zero local setup required.'
+              : 'Local Mode: Interfacing with your local FastAPI + Ollama server on localhost:8000.'}
+          </span>
+        </div>
+        <span className="font-mono text-[11px] opacity-75 hidden md:inline">
+          {currentMode === 'public' ? 'Provider: Groq Cloud (Free)' : 'Provider: Local Ollama'}
+        </span>
+      </div>
+
       {/* Header & Status Alert */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>

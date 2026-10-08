@@ -61,6 +61,8 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = ({ onNavigateToRun })
       }
     };
     loadResources();
+    window.addEventListener('modelpicker_mode_changed', loadResources);
+    return () => window.removeEventListener('modelpicker_mode_changed', loadResources);
   }, []);
 
   // Poll active run

@@ -128,3 +128,5 @@ export interface InferenceResult {
   estimated_cost?: number | null;
   timestamp: string;
 }
+
+export type InferenceMode = 'public' | 'local';

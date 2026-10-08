@@ -10,6 +10,7 @@ class Settings(BaseSettings):
         env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         extra="ignore",
+        protected_namespaces=("settings_",),
     )
 
     app_name: str = "ModelPicker"
@@ -22,11 +23,23 @@ class Settings(BaseSettings):
     )
 
     # LLM Serving
+    model_provider: str = Field(
+        default="ollama",
+        validation_alias="MODEL_PROVIDER",
+    )
     ollama_base_url: str = Field(
         default="http://localhost:11434",
         validation_alias="OLLAMA_BASE_URL",
     )
     ollama_timeout_seconds: float = 120.0
+    public_provider_api_key: str | None = Field(
+        default=None,
+        validation_alias="PUBLIC_PROVIDER_API_KEY",
+    )
+    public_provider_base_url: str = Field(
+        default="https://api.groq.com/openai/v1",
+        validation_alias="PUBLIC_PROVIDER_BASE_URL",
+    )
 
     # Database
     database_url: str = Field(

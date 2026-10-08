@@ -4,8 +4,13 @@ from pydantic import BaseModel, Field
 
 
 class InferenceRequest(BaseModel):
-    model: str = Field(..., description="Target model name, e.g. llama3.2:1b")
+    model: str = Field(
+        ..., description="Target model name, e.g. llama3.2:1b or llama-3.1-8b-instant"
+    )
     prompt: str = Field(..., min_length=1, max_length=100000, description="Input prompt")
+    provider: str | None = Field(
+        "ollama", description="Inference provider: 'ollama' or 'public_free'"
+    )
     temperature: float = Field(0.2, ge=0.0, le=2.0, description="Sampling temperature")
     max_tokens: int | None = Field(512, ge=1, le=8192, description="Maximum tokens to generate")
     stream: bool = Field(False, description="Whether to stream response")

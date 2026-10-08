@@ -36,6 +36,8 @@ export const ModelsPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
+    window.addEventListener('modelpicker_mode_changed', loadData);
+    return () => window.removeEventListener('modelpicker_mode_changed', loadData);
   }, []);
 
   const handlePullModel = async (modelName: string) => {

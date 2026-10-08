@@ -11,6 +11,7 @@ from app.schemas.model import (
 )
 from app.services.model_registry import model_registry_service
 from app.services.ollama import OllamaUnavailableError, ollama_service
+from app.services.providers.public_provider import DEFAULT_FREE_MODELS
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +19,29 @@ router = APIRouter(prefix="/models", tags=["Models"])
 
 
 @router.get("", response_model=list[ModelResponse], summary="List all models")
-async def list_models() -> list[ModelResponse]:
+async def list_models(provider: str | None = None) -> list[ModelResponse]:
     """
-    Returns registered models enriched with live Ollama installation status and size.
+    Returns registered models enriched with live Ollama or Public Free status.
     """
+    if provider == "public_free":
+        return [
+            ModelResponse(
+                id=m.id,
+                name=m.name,
+                provider="Public Free (Cloud)",
+                parameter_count=m.parameter_size,
+                context_length=m.context_length,
+                input_price=m.input_price_per_million,
+                output_price=m.output_price_per_million,
+                enabled=True,
+                metadata={"source": "public_free", "family": m.family},
+                installed=True,
+                size_bytes=None,
+                modified_at=None,
+            )
+            for m in DEFAULT_FREE_MODELS
+        ]
+
     registered = model_registry_service.get_registered_models()
 
     installed_map: dict[str, dict[str, Any]] = {}
