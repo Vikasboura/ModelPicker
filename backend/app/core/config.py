@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
     app_env: str = "development"
     log_level: str = "INFO"
+    cors_origins: str = Field(
+        default="*",
+        validation_alias="CORS_ORIGINS",
+    )
 
     # LLM Serving
     ollama_base_url: str = Field(
